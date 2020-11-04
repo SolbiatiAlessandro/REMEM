@@ -4,6 +4,8 @@ Replicating the "Remem" device from the SF novel ["The Truth of Fact, the Truth 
 
 ## MacOSX
 
+### Preprocessing 
+
 ```
 brew install portaudio
 pip install -r requirements
@@ -18,3 +20,19 @@ pip uninstall dataclasses
 ```
 
 To install pocketsphinx I had some error fixed with this https://github.com/bambocher/pocketsphinx-python/issues/28#issuecomment-334493324
+
+
+### Infra
+
+Using airflow to manage the data pipelines. Setup locally with postgres following this guide https://medium.com/@Newt_Tan/apache-airflow-installation-based-on-postgresql-database-26549b154d8
+
+On OSX the config file for postgres is at `/usr/local/var/postgres/`
+
+Once airflow is set up correctly run it with
+
+```
+set -x AIRFLOW__CORE__DAGS_FOLDER /Users/lessandro/Coding/AI/REMEM/remem
+airflow webserver -p 8080
+(in another tab) airflow scheduler
+```
+
