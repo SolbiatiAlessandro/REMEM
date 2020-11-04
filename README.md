@@ -4,5 +4,15 @@ Replicating the "Remem" device from the SF novel ["The Truth of Fact, the Truth 
 
 ## MacOSX
 
-`brew install portaudio
-pip install -r requirements`
+```
+brew install portaudio
+pip install -r requirements
+git clone https://github.com/pyannote/pyannote-audio.git
+cd pyannote-audio
+pip install .
+```
+
+For some reasons pyannote breaks with dataclasses from python<3.7 so you need to run
+```
+pip uninstall dataclasses
+```
