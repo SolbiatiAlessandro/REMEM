@@ -16,3 +16,5 @@ For some reasons pyannote breaks with dataclasses from python<3.7 so you need to
 ```
 pip uninstall dataclasses
 ```
+
+To install pocketsphinx I had some error fixed with this https://github.com/bambocher/pocketsphinx-python/issues/28#issuecomment-334493324
