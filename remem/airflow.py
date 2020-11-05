@@ -25,7 +25,7 @@ default_args = {
 with DAG('remem_preprocessing',
          catchup=False,
          default_args=default_args,
-         schedule_interval="*/1 * * * *",
+         schedule_interval="*/1 10-23 * * *",
          ) as dag:
 
     ## DECLARE OPERATORS
