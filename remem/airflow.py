@@ -10,9 +10,10 @@ import requests
 from airflow import DAG
 from airflow.models import Variable
 from airflow.operators.email_operator import EmailOperator
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.python_operator import PythonOperator, BranchPythonOperator
 
-from preprocessing import record_audio_operator, speaker_activity_detection_operator, transcribe_audio_operator
+from preprocessing import record_audio_operator, speaker_activity_detection_operator, transcribe_audio_operator, delete_audio_operator
+from preprocessing import TRANSCRIBE_AUDIO_OPERATOR_ID, DELETE_AUDIO_OPERATOR_ID, RECORD_AUDIO_OPERATOR_ID, SPEAKER_ACTIVITY_DETECTION_OPERATOR_ID
 
 default_args = {
     'owner': 'remem',
@@ -28,19 +29,28 @@ with DAG('remem_preprocessing',
          ) as dag:
 
     ## DECLARE OPERATORS
-    opr_record_audio = PythonOperator(
-            task_id='record_audio_operator',
+    opr_rec= PythonOperator(
+            task_id=RECORD_AUDIO_OPERATOR_ID,
             python_callable=record_audio_operator, 
             provide_context=True)
 
-    opr_sad = PythonOperator(
-            task_id='speaker_activity_detection_operator',
+    opr_sad = BranchPythonOperator(
+            task_id=SPEAKER_ACTIVITY_DETECTION_OPERATOR_ID,
             python_callable=speaker_activity_detection_operator, 
             provide_context=True)
 
     opr_asr = PythonOperator(
-            task_id='transcribe_audio_operator',
+            task_id=TRANSCRIBE_AUDIO_OPERATOR_ID,
             python_callable=transcribe_audio_operator, 
             provide_context=True)
 
-opr_record_audio >> opr_sad >> opr_asr
+    opr_del = PythonOperator(
+            task_id=DELETE_AUDIO_OPERATOR_ID,
+            python_callable=delete_audio_operator,
+            provide_context=True,
+            trigger_rule='none_failed_or_skipped')
+
+
+opr_rec >> opr_sad 
+opr_sad >> opr_asr >> opr_del
+opr_sad >> opr_del

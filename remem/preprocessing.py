@@ -1,26 +1,35 @@
+#stdlib
+import os
+from typing import List, Tuple
+
+#site-packages
 import torch
 import speech_recognition as sr
 import pyaudio
 import wave
-from typing import List, Tuple
+
+#remem
 from db import add_transcript
 
 AUDIO_FILES_FOLDER = 'static'
 MAX_AUDIO_FILES = 3
 AUDIO_LENGTH_SECONDS = 60
 
+TRANSCRIBE_AUDIO_OPERATOR_ID = 'transcribe_audio_operator'
+DELETE_AUDIO_OPERATOR_ID = 'delete_audio_operator'
+RECORD_AUDIO_OPERATOR_ID = 'record_audio_operator'
+SPEAKER_ACTIVITY_DETECTION_OPERATOR_ID = 'speaker_activity_detection_operator'
+
 def transcribe_audio_operator(**kwargs):
     task_instance = kwargs['ti']
-    activity_detected, filename = task_instance.xcom_pull(
+    filename = task_instance.xcom_pull(
             key=None,
-            task_ids='speaker_activity_detection_operator')
-    if not activity_detected:
-        print("[transcribe_audio_operator] got no activity detected, not running ASR")
-    else:
-        transcription = transcribe_audio(filename)
-        print("[transcribe_audio_operator] ASR results:")
-        print(transcription)
-        add_transcript(transcription, kwargs['ts_nodash'])
+            task_ids=RECORD_AUDIO_OPERATOR_ID)
+    transcription = transcribe_audio(filename)
+    print("[transcribe_audio_operator] ASR results:")
+    print(transcription)
+    add_transcript(transcription, kwargs['ts_nodash'])
+    print("[transcribe_audio_operator] added to database")
 
 def transcribe_audio(audio_file: str) -> str:
     """
@@ -40,7 +49,7 @@ def delete_audio_operator(**kwargs):
     task_instance = kwargs['ti']
     filename = task_instance.xcom_pull(
             key=None,
-            task_ids='record_audio_operator')
+            task_ids=RECORD_AUDIO_OPERATOR_ID)
     if len(os.listdir(AUDIO_FILES_FOLDER)) > MAX_AUDIO_FILES:
         os.remove(filename)
 
@@ -95,18 +104,19 @@ def speaker_activity_detection_operator(**kwargs):
     task_instance = kwargs['ti']
     filename = task_instance.xcom_pull(
             key=None,
-            task_ids='record_audio_operator')
+            task_ids=RECORD_AUDIO_OPERATOR_ID)
     activity_detected = speaker_activity_detection(filename)
     if activity_detected:
         print("[speaker_activity_detection_operator] activity detected for "+filename)
         for speech_region in activity:
             print(f'There is speech between t={speech_region[0]:.1f}s and t={speech_region[1]:.1f}s.')
+        return TRANSCRIBE_AUDIO_OPERATOR_ID
     else:
         print("[speaker_activity_detection_operator] no activity detected for "+filename)
-    return activity_detected, filename
+        return DELETE_AUDIO_OPERATOR_ID
 
 
-def speaker_activity_detection(audio_file: str) -> List[Tuple[float, float]]:
+def speaker_activity_detection(audio_file: str) -> bool:
     "return list with start and end of speaker segments in seconds"
     print("[speaker_activity_detection] running pipeline on "+audio_file)
     pipeline = torch.hub.load('pyannote/pyannote-audio', 'sad', pipeline=True)
