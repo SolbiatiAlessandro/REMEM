@@ -31,6 +31,7 @@ On OSX the config file for postgres is at `/usr/local/var/postgres/`
 Once airflow is set up correctly run it with
 
 ```
+set -x OBJC_DISABLE_INITIALIZE_FORK_SAFETY YES (https://stackoverflow.com/questions/50168647/multiprocessing-causes-python-to-crash-and-gives-an-error-may-have-been-in-progr)
 set -x AIRFLOW__CORE__DAGS_FOLDER /Users/lessandro/Coding/AI/REMEM/remem
 airflow webserver -p 8080
 (in another tab) airflow scheduler

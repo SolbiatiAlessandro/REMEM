@@ -14,6 +14,7 @@ from db import add_transcript
 AUDIO_FILES_FOLDER = 'static'
 MAX_AUDIO_FILES = 3
 AUDIO_LENGTH_SECONDS = 60
+SPEECH_DETECTION_THRESHOLD = 5
 
 TRANSCRIBE_AUDIO_OPERATOR_ID = 'transcribe_audio_operator'
 DELETE_AUDIO_OPERATOR_ID = 'delete_audio_operator'
@@ -101,26 +102,29 @@ def record_audio(seconds: int, filename: str):
     wf.close()
 
 def speaker_activity_detection_operator(**kwargs):
+    """this is a branch operator, returns operator ID for next task"""
     task_instance = kwargs['ti']
     filename = task_instance.xcom_pull(
             key=None,
             task_ids=RECORD_AUDIO_OPERATOR_ID)
-    activity_detected = speaker_activity_detection(filename)
-    if activity_detected:
-        print("[speaker_activity_detection_operator] activity detected for "+filename)
-        for speech_region in activity:
-            print(f'There is speech between t={speech_region[0]:.1f}s and t={speech_region[1]:.1f}s.')
-        return TRANSCRIBE_AUDIO_OPERATOR_ID
-    else:
-        print("[speaker_activity_detection_operator] no activity detected for "+filename)
-        return DELETE_AUDIO_OPERATOR_ID
-
+    return TRANSCRIBE_AUDIO_OPERATOR_ID if speaker_activity_detection(filename) else DELETE_AUDIO_OPERATOR_ID
 
 def speaker_activity_detection(audio_file: str) -> bool:
-    "return list with start and end of speaker segments in seconds"
+    """return list with start and end of speaker segments in seconds"""
     print("[speaker_activity_detection] running pipeline on "+audio_file)
     pipeline = torch.hub.load('pyannote/pyannote-audio', 'sad', pipeline=True)
     input_file = {'uri': 'input_file', 'audio': audio_file}
     sad_output = pipeline(input_file)
-    activity_length = sum([sr.end - sr.start for sr in sad_output.get_timeline()]) 
-    return activity_length > (AUDIO_LENGTH_SECONDS / 4)
+    segments = [(sr.start, sr.end) for sr in sad_output.get_timeline()]
+
+    for speech_region in segments:
+        print(f'There is speech between t={speech_region[0]:.1f}s and t={speech_region[1]:.1f}s.')
+    activity_length = sum(map(lambda x: x[1] - x[0], segments))
+    activity = activity_length > SPEECH_DETECTION_THRESHOLD
+    print("[speaker_activity_detection] SPEECH_DETECTION_THRESHOLD "+str(SPEECH_DETECTION_THRESHOLD))
+    if activity:
+        print("[speaker_activity_detection] activity detected for "+audio_file)
+    else:
+        print("[speaker_activity_detection] no activity detected for "+audio_file)
+    return activity
+
