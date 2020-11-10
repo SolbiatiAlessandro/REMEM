@@ -11,9 +11,10 @@ from airflow import DAG
 from airflow.models import Variable
 from airflow.operators.email_operator import EmailOperator
 from airflow.operators.python_operator import PythonOperator, BranchPythonOperator
+from airflow.operators.dummy_operator import DummyOperator
 
 from preprocessing import record_audio_operator, speaker_activity_detection_operator, transcribe_audio_operator, delete_audio_operator
-from preprocessing import TRANSCRIBE_AUDIO_OPERATOR_ID, DELETE_AUDIO_OPERATOR_ID, RECORD_AUDIO_OPERATOR_ID, SPEAKER_ACTIVITY_DETECTION_OPERATOR_ID
+from preprocessing import NOT_TRANSCRIBE_AUDIO_OPERATOR_ID, TRANSCRIBE_AUDIO_OPERATOR_ID, DELETE_AUDIO_OPERATOR_ID, RECORD_AUDIO_OPERATOR_ID, SPEAKER_ACTIVITY_DETECTION_OPERATOR_ID
 
 default_args = {
     'owner': 'remem',
@@ -44,6 +45,9 @@ with DAG('remem_preprocessing',
             python_callable=transcribe_audio_operator, 
             provide_context=True)
 
+    opr_not_asr = DummyOperator(
+            task_id=NOT_TRANSCRIBE_AUDIO_OPERATOR_ID)
+
     opr_del = PythonOperator(
             task_id=DELETE_AUDIO_OPERATOR_ID,
             python_callable=delete_audio_operator,
@@ -53,4 +57,4 @@ with DAG('remem_preprocessing',
 
 opr_rec >> opr_sad 
 opr_sad >> opr_asr >> opr_del
-opr_sad >> opr_del
+opr_sad >> opr_not_asr >> opr_del

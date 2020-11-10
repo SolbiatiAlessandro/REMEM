@@ -10,12 +10,14 @@ import wave
 
 #remem
 from db import add_transcript
+from deepspeech_stt import predict as predict_stt
 
 AUDIO_FILES_FOLDER = 'static'
 MAX_AUDIO_FILES = 3
 AUDIO_LENGTH_SECONDS = 60
 SPEECH_DETECTION_THRESHOLD = 5
 
+NOT_TRANSCRIBE_AUDIO_OPERATOR_ID = 'not_transcribe_audio_operator'
 TRANSCRIBE_AUDIO_OPERATOR_ID = 'transcribe_audio_operator'
 DELETE_AUDIO_OPERATOR_ID = 'delete_audio_operator'
 RECORD_AUDIO_OPERATOR_ID = 'record_audio_operator'
@@ -34,17 +36,9 @@ def transcribe_audio_operator(**kwargs):
 
 def transcribe_audio(audio_file: str) -> str:
     """
-    can raise if the transcription breaks
-    except sr.UnknownValueError:
-        print("Sphinx could not understand audio")
-    except sr.RequestError as e:
-        print("Sphinx error; {0}".format(e))
     """
     print("[transcribe_audio] running ASR")
-    r = sr.Recognizer()
-    with sr.AudioFile(audio_file) as source:
-        audio = r.record(source)  # read the entire audio file
-    return r.recognize_sphinx(audio)
+    return predict_stt(audio_file)
 
 def delete_audio_operator(**kwargs):
     task_instance = kwargs['ti']
@@ -66,7 +60,7 @@ def record_audio(seconds: int, filename: str):
     chunk = 1024  # Record in chunks of 1024 samples
     sample_format = pyaudio.paInt16  # 16 bits per sample
     channels = 1
-    fs = 44100  # Record at 44100 samples per second
+    fs = 16000  # Record at 44100 samples per second
 
     p = pyaudio.PyAudio()  # Create an interface to PortAudio
 
@@ -107,7 +101,7 @@ def speaker_activity_detection_operator(**kwargs):
     filename = task_instance.xcom_pull(
             key=None,
             task_ids=RECORD_AUDIO_OPERATOR_ID)
-    return TRANSCRIBE_AUDIO_OPERATOR_ID if speaker_activity_detection(filename) else DELETE_AUDIO_OPERATOR_ID
+    return TRANSCRIBE_AUDIO_OPERATOR_ID if speaker_activity_detection(filename) else NOT_TRANSCRIBE_AUDIO_OPERATOR_ID
 
 def speaker_activity_detection(audio_file: str) -> bool:
     """return list with start and end of speaker segments in seconds"""

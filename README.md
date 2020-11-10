@@ -37,3 +37,9 @@ airflow webserver -p 8080
 (in another tab) airflow scheduler
 ```
 
+Had some bugs install airflowws run this
+``` 
+# https://github.com/apache/airflow/issues/11965#issuecomment-719488558
+pip install apache-airflow==1.10.12 \
+ --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-1.10.12/constraints-3.7.txt"
+```
