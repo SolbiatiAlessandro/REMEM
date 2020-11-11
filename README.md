@@ -1,5 +1,12 @@
 # REMEM
-Replicating the "Remem" device from the SF novel ["The Truth of Fact, the Truth of Feeling" by Ted Chiang](https://en.wikipedia.org/wiki/The_Truth_of_Fact,_the_Truth_of_Feeling).
+Replicating the "Remem" device from the Science Fiction novel ["The Truth of Fact, the Truth of Feeling" by Ted Chiang](https://en.wikipedia.org/wiki/The_Truth_of_Fact,_the_Truth_of_Feeling).
+
+```
+"Remem", a form of lifelogging whose advanced search algorithms 
+effectively grant its users eidetic memory of everything that
+ever happened to them, and the ability to perfectly and objectively 
+share those memories.
+```
 
 A screenshot from the Grafana of REMEM
 
