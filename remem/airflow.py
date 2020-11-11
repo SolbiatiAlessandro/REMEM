@@ -16,6 +16,9 @@ from airflow.operators.dummy_operator import DummyOperator
 from preprocessing import record_audio_operator, speaker_activity_detection_operator, transcribe_audio_operator, delete_audio_operator
 from preprocessing import NOT_TRANSCRIBE_AUDIO_OPERATOR_ID, TRANSCRIBE_AUDIO_OPERATOR_ID, DELETE_AUDIO_OPERATOR_ID, RECORD_AUDIO_OPERATOR_ID, SPEAKER_ACTIVITY_DETECTION_OPERATOR_ID
 
+SCHEDULE_INTERVAL = "*/1 10-23 * * *"
+#SCHEDULE_INTERVAL = None
+
 default_args = {
     'owner': 'remem',
     'start_date': dt.datetime(2018, 10, 3, 15, 58, 00),
@@ -26,7 +29,7 @@ default_args = {
 with DAG('remem_preprocessing',
          catchup=False,
          default_args=default_args,
-         schedule_interval="*/1 10-23 * * *",
+         schedule_interval=SCHEDULE_INTERVAL,
          ) as dag:
 
     ## DECLARE OPERATORS

@@ -11,6 +11,7 @@ import wave
 #remem
 from db import add_transcript
 from deepspeech_stt import predict as predict_stt
+from memory_tracing import memory_trace
 
 AUDIO_FILES_FOLDER = 'static'
 MAX_AUDIO_FILES = 3
@@ -23,6 +24,7 @@ DELETE_AUDIO_OPERATOR_ID = 'delete_audio_operator'
 RECORD_AUDIO_OPERATOR_ID = 'record_audio_operator'
 SPEAKER_ACTIVITY_DETECTION_OPERATOR_ID = 'speaker_activity_detection_operator'
 
+@memory_trace
 def transcribe_audio_operator(**kwargs):
     task_instance = kwargs['ti']
     filename = task_instance.xcom_pull(
@@ -40,6 +42,7 @@ def transcribe_audio(audio_file: str) -> str:
     print("[transcribe_audio] running ASR")
     return predict_stt(audio_file)
 
+@memory_trace
 def delete_audio_operator(**kwargs):
     task_instance = kwargs['ti']
     filename = task_instance.xcom_pull(
@@ -48,6 +51,7 @@ def delete_audio_operator(**kwargs):
     if len(os.listdir(AUDIO_FILES_FOLDER)) > MAX_AUDIO_FILES:
         os.remove(filename)
 
+@memory_trace
 def record_audio_operator(**kwargs):
     ts_nodash = kwargs['ts_nodash']
     seconds = AUDIO_LENGTH_SECONDS
@@ -95,6 +99,7 @@ def record_audio(seconds: int, filename: str):
     wf.writeframes(b''.join(frames))
     wf.close()
 
+@memory_trace
 def speaker_activity_detection_operator(**kwargs):
     """this is a branch operator, returns operator ID for next task"""
     task_instance = kwargs['ti']
