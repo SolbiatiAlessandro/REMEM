@@ -76,3 +76,5 @@ I set up a grafana dashboard at http://localhost/dashboard/db/remem-monitoring
 
 We monitor memory allocation in the dashboard using tracemalloc and statsd.
 For some reason if I increament of `1938639 bytes` on grafana end I get `63100`
+
+I don't really get the metrics I want so I opened a issue here on airflow https://github.com/apache/airflow/issues/12368
